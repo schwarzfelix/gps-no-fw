@@ -5,7 +5,7 @@
 #include <LittleFS.h>
 #include <MD5Builder.h>
 #include "WiFi.h"
-#include "ConfigDefines.h"
+#include "config/ConfigDefines.h"
 
 struct RuntimeConfig {
     char deviceName[32];
@@ -16,6 +16,7 @@ struct RuntimeConfig {
     uint16_t mqttPort;
     char mqttUser[32];
     char mqttPassword[64];
+    uint32_t wifiCheckInterval;
     uint32_t mqttRetryInterval;
     uint64_t chipID;
     char macAddress[18];    
@@ -62,6 +63,8 @@ public:
     uint32_t getMqttRetryInterval() const { return config.mqttRetryInterval; }
     uint64_t getChipID() const { return config.chipID; }
     const char* getMacAddress() const { return config.macAddress; }
+    const char* getHash() const { return config.hash; }
+    uint32_t getWifiCheckInterval() const { return config.wifiCheckInterval; }
 };
 
 #endif

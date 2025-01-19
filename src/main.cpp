@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <ConfigManager.h>
+#include <Device.h>
 
 
 void setup() {
@@ -14,6 +15,8 @@ void setup() {
   Serial.println(F("###################################################"));
 
   ConfigManager& configManager = ConfigManager::getInstance();
+  Device& device = Device::getInstance();
+
   if(!configManager.begin()) {
     Serial.println(F("Failed to initialize ConfigManager"));
     while(true);
@@ -24,8 +27,13 @@ void setup() {
     configManager.updateDeviceConfig();
   }
 
+  Serial.println(F("###################################################"));
   configManager.print(&configManager.getRuntimeConfig());
+  Serial.println(F("###################################################"));
+
+  device.changeState(SetupState::getInstance(&device));
 }
 
 void loop() {
+  Device::getInstance().update();
 }
