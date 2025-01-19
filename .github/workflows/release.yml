@@ -46,9 +46,6 @@ jobs:
           echo "New version: $new_version"
 
           echo "new_version=$new_version" >> $GITHUB_ENV
-
-    - name: Set up PlatformIO
-      uses: platformio/platformio-action@v2.0.0
       
     - name: Build firmware
       run: pio run
