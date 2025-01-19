@@ -46,7 +46,7 @@ jobs:
           echo "New version: $new_version"
 
           echo "new_version=$new_version" >> $GITHUB_ENV
-      
+          
     - name: Build firmware
       run: pio run
 
