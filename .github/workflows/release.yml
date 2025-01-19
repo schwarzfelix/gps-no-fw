@@ -53,7 +53,10 @@ jobs:
     - name: Archive firmware binaries
       run: |
         mkdir artifacts
-        cp .pio/build/*/firmware.bin artifacts/
+        for f in .pio/build/*/firmware.bin; do
+          cp "$f" "artifacts/$(basename $(dirname $f))-firmware.bin"
+        done
+        
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
