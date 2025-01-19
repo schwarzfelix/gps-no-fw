@@ -50,12 +50,14 @@ jobs:
     - name: Build firmware
       run: pio run
 
+    - name: List build directory contents
+      run: ls -R .pio/build/
+
     - name: Archive firmware binaries
       run: |
         mkdir artifacts
-        for f in .pio/build/*/firmware.bin; do
-          cp "$f" "artifacts/$(basename $(dirname $f))-firmware.bin"
-        done
+        cp .pio/build/receiver/firmware.bin artifacts/receiver-firmware.bin
+        cp .pio/build/transmitter/firmware.bin artifacts/transmitter-firmware.bin
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
@@ -80,6 +82,16 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.SECRET_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/firmware.bin
-        asset_name: firmware.bin
+        asset_path: artifacts/receiver-firmware.bin
+        asset_name: receiver-firmware.bin
+        asset_content_type: application/octet-stream
+
+    - name: Upload Transmitter Firmware to Release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.SECRET_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: artifacts/transmitter-firmware.bin
+        asset_name: transmitter-firmware.bin
         asset_content_type: application/octet-stream
