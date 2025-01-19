@@ -13,18 +13,18 @@ void setup() {
   Serial.println();
   Serial.println(F("###################################################"));
 
-  ConfigManager* configManager = ConfigManager::getInstance();
-  if(!configManager->begin()) {
+  ConfigManager& configManager = ConfigManager::getInstance();
+  if(!configManager.begin()) {
     Serial.println(F("Failed to initialize ConfigManager"));
     while(true);
   }
 
-  if (configManager->hasConfigDefinesChanged()) {
+  if (configManager.hasConfigDefinesChanged()) {
     Serial.println(F("ConfigDefines has changed, updating device config"));
-    configManager->updateDeviceConfig();
+    configManager.updateDeviceConfig();
   }
 
-  configManager->print();
+  configManager.print(&configManager.getRuntimeConfig());
 }
 
 void loop() {

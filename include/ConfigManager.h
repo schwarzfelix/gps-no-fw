@@ -24,25 +24,32 @@ struct RuntimeConfig {
 
 class ConfigManager {
 private:
-    static ConfigManager* instance;
+    ConfigManager() : initialized(false) {
+        loadDefaults();
+    }
     RuntimeConfig config;
-    const char* CONFIG_FILE = "/config.dat";
+    static constexpr const char* CONFIG_FILE = "/config.bin";
     bool initialized;
 
-
-    ConfigManager();
     String calculateHash(RuntimeConfig* config);
     bool loadFromFlash();
     bool saveToFlash();
     void loadDefaults();
+    void setConfigFromDefines(RuntimeConfig* config);
 
 public:
-    static ConfigManager* getInstance();
+    ConfigManager(const ConfigManager&) = delete;
+    void operator=(const ConfigManager&) = delete;
+
+    static ConfigManager& getInstance(){
+        static ConfigManager instance;
+        return instance;
+    }
     bool begin();
-    const RuntimeConfig& getRuntimeConfig() const { return config; }
+    RuntimeConfig& getRuntimeConfig() { return config; }
     bool hasConfigDefinesChanged();
     void updateDeviceConfig();
-    void print();
+    void print(RuntimeConfig* config);
 
     const char* getDeviceName() const { return config.deviceName; }
     const char* getFirmwareVersion() const { return config.firmwareVersion; }

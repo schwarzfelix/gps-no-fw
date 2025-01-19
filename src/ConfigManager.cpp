@@ -1,47 +1,32 @@
 #include "ConfigManager.h"
 
-ConfigManager* ConfigManager::instance = nullptr;
-
-ConfigManager::ConfigManager() : initialized(false) {
-    loadDefaults();
-}
-
-ConfigManager* ConfigManager::getInstance() {
-    if (instance == nullptr) {
-        instance = new ConfigManager();
-    }
-    return instance;
-}
-
 void ConfigManager::loadDefaults() {
-    strncpy(config.wifiSSID, WIFI_SSID, sizeof(config.wifiSSID) - 1);
-    strncpy(config.wifiPassword, WIFI_PASSWORD, sizeof(config.wifiPassword) - 1);
-    strncpy(config.mqttBroker, MQTT_BROKER, sizeof(config.mqttBroker) - 1);
-    config.mqttPort = MQTT_PORT;
-    strncpy(config.mqttUser, MQTT_USER, sizeof(config.mqttUser) - 1);
-    strncpy(config.mqttPassword, MQTT_PASSWORD, sizeof(config.mqttPassword) - 1);
-    config.mqttRetryInterval = MQTT_RETRY_INTERVAL;
+    setConfigFromDefines(&config);
+
     config.chipID = ESP.getEfuseMac();
+
     String mac = WiFi.macAddress();
-    mac.toCharArray(config.macAddress, sizeof(config.macAddress));      
-    
+    mac.toCharArray(config.macAddress, sizeof(config.macAddress));
+    config.macAddress[sizeof(config.macAddress) - 1] = '\0';
+
     String hash = calculateHash(&config);
     strncpy(config.hash, hash.c_str(), sizeof(config.hash) - 1);
+    config.hash[sizeof(config.hash) - 1] = '\0';
 }
 
-void ConfigManager::print() {
-    Serial.printf("Device Name: %s\n", config.deviceName);
-    Serial.printf("Firmware Version: %s\n", config.firmwareVersion);
-    Serial.printf("WiFi SSID: %s\n", config.wifiSSID);
-    Serial.printf("WiFi Password: %s\n", config.wifiPassword);
-    Serial.printf("MQTT Broker: %s\n", config.mqttBroker);
-    Serial.printf("MQTT Port: %d\n", config.mqttPort);
-    Serial.printf("MQTT User: %s\n", config.mqttUser);
-    Serial.printf("MQTT Password: %s\n", config.mqttPassword);
-    Serial.printf("MQTT Retry Interval: %d\n", config.mqttRetryInterval);
-    Serial.printf("Chip ID: %llu\n", config.chipID);
-    Serial.printf("MAC Address: %s\n", config.macAddress);
-    Serial.printf("Config Hash: %s\n", config.hash);
+void ConfigManager::print(RuntimeConfig* config) {
+    Serial.printf("Device Name: %s\n", config->deviceName);
+    Serial.printf("Firmware Version: %s\n", config->firmwareVersion);
+    Serial.printf("WiFi SSID: %s\n", config->wifiSSID);
+    Serial.printf("WiFi Password: %s\n", config->wifiPassword);
+    Serial.printf("MQTT Broker: %s\n", config->mqttBroker);
+    Serial.printf("MQTT Port: %d\n", config->mqttPort);
+    Serial.printf("MQTT User: %s\n", config->mqttUser);
+    Serial.printf("MQTT Password: %s\n", config->mqttPassword);
+    Serial.printf("MQTT Retry Interval: %d\n", config->mqttRetryInterval);
+    Serial.printf("Chip ID: %llu\n", config->chipID);
+    Serial.printf("MAC Address: %s\n", config->macAddress);
+    Serial.printf("Config Hash: %s\n", config->hash);
 }
 
 String ConfigManager::calculateHash(RuntimeConfig* config) {
@@ -49,13 +34,13 @@ String ConfigManager::calculateHash(RuntimeConfig* config) {
     md5.begin();
     
     String configString = 
-                            String(config->wifiSSID) +
-                            String(config->wifiPassword) +
-                            String(config->mqttBroker) +
-                            String(config->mqttPort) +
-                            String(config->mqttUser) +
-                            String(config->mqttPassword) +
-                            String(config->mqttRetryInterval);
+        String(config->wifiSSID) +
+        String(config->wifiPassword) +
+        String(config->mqttBroker) +
+        String(config->mqttPort) +
+        String(config->mqttUser) +
+        String(config->mqttPassword) +
+        String(config->mqttRetryInterval);
 
     md5.add(configString);
     md5.calculate();
@@ -70,16 +55,42 @@ bool ConfigManager::begin() {
 
     if(!LittleFS.begin(true)) {
         Serial.println(F("Failed to mount file system"));
+        loadDefaults();
         return false;
     }
 
     if(!loadFromFlash()) {
         Serial.println(F("Failed to load config from flash, using defaults"));        
-        saveToFlash();
+        if (!saveToFlash()) {
+            Serial.println(F("Failed to save defaults to flash"));
+            return false;
+        }
     }
 
     initialized = true;
     return true;
+}
+
+void ConfigManager::setConfigFromDefines(RuntimeConfig* config) {
+    memset(config, 0, sizeof(RuntimeConfig));
+    strncpy(config->wifiSSID, WIFI_SSID, sizeof(config->wifiSSID) - 1);
+    config->wifiSSID[sizeof(config->wifiSSID) - 1] = '\0';
+
+    strncpy(config->wifiPassword, WIFI_PASSWORD, sizeof(config->wifiPassword) - 1);
+    config->wifiPassword[sizeof(config->wifiPassword) - 1] = '\0';
+
+    strncpy(config->mqttBroker, MQTT_BROKER, sizeof(config->mqttBroker) - 1);
+    config->mqttBroker[sizeof(config->mqttBroker) - 1] = '\0';
+
+    config->mqttPort = MQTT_PORT;
+
+    strncpy(config->mqttUser, MQTT_USER, sizeof(config->mqttUser) - 1);
+    config->mqttUser[sizeof(config->mqttUser) - 1] = '\0';
+
+    strncpy(config->mqttPassword, MQTT_PASSWORD, sizeof(config->mqttPassword) - 1);
+    config->mqttPassword[sizeof(config->mqttPassword) - 1] = '\0';
+
+    config->mqttRetryInterval = MQTT_RETRY_INTERVAL;
 }
 
 bool ConfigManager::loadFromFlash() {
@@ -114,24 +125,16 @@ bool ConfigManager::saveToFlash() {
 }
 
 bool ConfigManager::hasConfigDefinesChanged() {
-    RuntimeConfig runtimeConfig;
-    strncpy(runtimeConfig.wifiSSID, WIFI_SSID, sizeof(runtimeConfig.wifiSSID) - 1);
-    strncpy(runtimeConfig.wifiPassword, WIFI_PASSWORD, sizeof(runtimeConfig.wifiPassword) - 1);
-    strncpy(runtimeConfig.mqttBroker, MQTT_BROKER, sizeof(runtimeConfig.mqttBroker) - 1);
-    runtimeConfig.mqttPort = MQTT_PORT;
-    strncpy(runtimeConfig.mqttUser, MQTT_USER, sizeof(runtimeConfig.mqttUser) - 1);
-    strncpy(runtimeConfig.mqttPassword, MQTT_PASSWORD, sizeof(runtimeConfig.mqttPassword) - 1);
-    runtimeConfig.mqttRetryInterval = MQTT_RETRY_INTERVAL;
+    RuntimeConfig defaultConfig;
+    setConfigFromDefines(&defaultConfig);
 
-    String fileConfigHash = calculateHash(&runtimeConfig);
-    Serial.printf("File Config Hash: %s - Stored Config Hash: %s\n", fileConfigHash.c_str(), config.hash);
-    return strcmp(fileConfigHash.c_str(), config.hash) != 0;
+    String defaultConfigHash = calculateHash(&defaultConfig);
+    Serial.printf("File Config Hash: %s - Stored Config Hash: %s\n", defaultConfigHash.c_str(), config.hash);
+    return strcmp(defaultConfigHash.c_str(), config.hash) != 0;
 }
 
 void ConfigManager::updateDeviceConfig() {
-    if(hasConfigDefinesChanged()) {
-        loadDefaults();
-        saveToFlash();
-        Serial.println(F("Updated config"));
-    }
+    loadDefaults();
+    saveToFlash();
+    Serial.println(F("Updated config"));
 }
