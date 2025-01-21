@@ -6,7 +6,9 @@ void Device::changeState(DeviceState& newState) {
     }
 
     currentState = &newState;
-    currentState->enter();
+    if(currentState){
+        currentState->enter();
+    }
 }
 
 void Device::update() {

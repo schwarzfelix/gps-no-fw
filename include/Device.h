@@ -4,6 +4,7 @@
 #include "ConfigManager.h"
 #include "states/DeviceState.h"
 #include "states/SetupState.h"
+#include "Logger.h"
 
 class DeviceState;
 

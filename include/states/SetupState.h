@@ -1,17 +1,20 @@
 #ifndef SETUP_STATE_H
 #define SETUP_STATE_H
 
-#include "ConfigManager.h"
-#include "DeviceState.h"
+#include <Device.h>
 #include <WiFi.h>
-#include "Device.h"
+#include <Logger.h>
 
 class SetupState : public DeviceState {
 private:
     SetupState(Device* device) 
-        : DeviceState(device)
+        : DeviceState(device, StateIdentifier::SETUP_STATE)
+        , log(Logger::getInstance())
+        , configManager(ConfigManager::getInstance())
         , lastWifiCheck(0)
         , isWifiConnected(false) {};
+    Logger& log;
+    ConfigManager& configManager;
     uint32_t lastWifiCheck;
     bool isWifiConnected;
 
