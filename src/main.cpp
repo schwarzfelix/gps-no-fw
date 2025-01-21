@@ -2,7 +2,8 @@
 #include <Wire.h>
 #include <ConfigManager.h>
 #include <Device.h>
-
+#include <Logger.h>
+#include <states/IdleState.h>
 
 void setup() {
   Serial.begin(MONITOR_SPEED);
@@ -15,15 +16,16 @@ void setup() {
   Serial.println(F("###################################################"));
 
   ConfigManager& configManager = ConfigManager::getInstance();
+  Logger& log = Logger::getInstance();
   Device& device = Device::getInstance();
 
   if(!configManager.begin()) {
-    Serial.println(F("Failed to initialize ConfigManager"));
+    log.error("main", "Failed to initialize ConfigManager");
     while(true);
   }
 
   if (configManager.hasConfigDefinesChanged()) {
-    Serial.println(F("ConfigDefines has changed, updating device config"));
+    log.info("main", "ConfigDefines has changed, updating device config");
     configManager.updateDeviceConfig();
   }
 
@@ -31,7 +33,7 @@ void setup() {
   configManager.print(&configManager.getRuntimeConfig());
   Serial.println(F("###################################################"));
 
-  device.changeState(SetupState::getInstance(&device));
+  device.changeState(IdleState::getInstance(&device));
 }
 
 void loop() {
