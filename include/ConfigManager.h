@@ -5,7 +5,7 @@
 #include <LittleFS.h>
 #include <MD5Builder.h>
 #include "WiFi.h"
-#include "config/ConfigDefines.h"
+#include "ConfigDefines.h"
 
 struct RuntimeConfig {
     char deviceName[32];
@@ -19,7 +19,19 @@ struct RuntimeConfig {
     uint32_t wifiCheckInterval;
     uint32_t mqttRetryInterval;
     uint64_t chipID;
-    char macAddress[18];    
+    char macAddress[18];
+    
+    struct {
+        uint8_t maxRecoveryAttempts;
+        uint32_t recoveryInterval;
+    } error;
+
+    struct {
+        bool allowMqttLog;
+        char mqttTopic[64];
+        uint8_t logLevel;
+    } logging;
+
     char hash[33];
 };
 
@@ -65,6 +77,11 @@ public:
     const char* getMacAddress() const { return config.macAddress; }
     const char* getHash() const { return config.hash; }
     uint32_t getWifiCheckInterval() const { return config.wifiCheckInterval; }
+    uint8_t getErrorMaxRecoveryAttempts() const { return config.error.maxRecoveryAttempts; }
+    uint32_t getErrorRecoveryInterval() const { return config.error.recoveryInterval; }
+    bool getLoggingAllowMqttLog() const { return config.logging.allowMqttLog; }
+    const char* getLoggingMqttTopic() const { return config.logging.mqttTopic; }
+    uint8_t getLoggingLogLevel() const { return config.logging.logLevel; }
 };
 
 #endif

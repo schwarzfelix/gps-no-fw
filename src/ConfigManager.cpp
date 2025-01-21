@@ -26,6 +26,11 @@ void ConfigManager::print(RuntimeConfig* config) {
     Serial.printf("MQTT Retry Interval: %d\n", config->mqttRetryInterval);
     Serial.printf("Chip ID: %llu\n", config->chipID);
     Serial.printf("MAC Address: %s\n", config->macAddress);
+    Serial.printf("Error Max Recovery Attempts: %d\n", config->error.maxRecoveryAttempts);
+    Serial.printf("Error Recovery Interval: %d\n", config->error.recoveryInterval);
+    Serial.printf("Logging Allow MQTT Log: %s\n", config->logging.allowMqttLog ? "true" : "false");
+    Serial.printf("Logging MQTT Topic: %s\n", config->logging.mqttTopic);
+    Serial.printf("Logging Level: %d\n", config->logging.logLevel);
     Serial.printf("Config Hash: %s\n", config->hash);
 }
 
@@ -34,6 +39,7 @@ String ConfigManager::calculateHash(RuntimeConfig* config) {
     md5.begin();
     
     String configString = 
+        String(config->deviceName) +
         String(config->wifiSSID) +
         String(config->wifiPassword) +
         String(config->mqttBroker) +
@@ -53,10 +59,18 @@ bool ConfigManager::begin() {
         return true;
     }
 
+    if (ESP.getFreeHeap() < 10000) {
+        Serial.println(F("Warning: Low memory"));
+    }
+
     if(!LittleFS.begin(true)) {
         Serial.println(F("Failed to mount file system"));
         loadDefaults();
         return false;
+    }
+
+    if (LittleFS.totalBytes() - LittleFS.usedBytes() < sizeof(RuntimeConfig)) {
+        Serial.println(F("Warning: Low storage space"));
     }
 
     if(!loadFromFlash()) {
@@ -73,6 +87,9 @@ bool ConfigManager::begin() {
 
 void ConfigManager::setConfigFromDefines(RuntimeConfig* config) {
     memset(config, 0, sizeof(RuntimeConfig));
+    strncpy(config->deviceName, DEVICE_NAME, sizeof(config->deviceName) - 1);
+    config->deviceName[sizeof(config->deviceName) - 1] = '\0';
+
     strncpy(config->wifiSSID, WIFI_SSID, sizeof(config->wifiSSID) - 1);
     config->wifiSSID[sizeof(config->wifiSSID) - 1] = '\0';
 
@@ -91,6 +108,15 @@ void ConfigManager::setConfigFromDefines(RuntimeConfig* config) {
     config->mqttPassword[sizeof(config->mqttPassword) - 1] = '\0';
 
     config->mqttRetryInterval = MQTT_RETRY_INTERVAL;
+
+    config->error.maxRecoveryAttempts = ERROR_MAX_RECOVERY_ATTEMPTS;
+    config->error.recoveryInterval = ERROR_RECOVERY_INTERVAL;
+
+    config->logging.allowMqttLog = LOGGING_ALLOW_MQTT_LOG;
+    config->logging.logLevel = LOGGING_LEVEL;
+
+    strncpy(config->logging.mqttTopic, LOGGING_MQTT_TOPIC, sizeof(config->logging.mqttTopic) - 1);
+    config->logging.mqttTopic[sizeof(config->logging.mqttTopic) - 1] = '\0';
 }
 
 bool ConfigManager::loadFromFlash() {
