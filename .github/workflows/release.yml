@@ -22,26 +22,13 @@ jobs:
       with:
         python-version: '3.11'
 
-    - name: Determine Version Increment
-      id: version
-      run: |
-        increment="patch"
-        
-        if git log -1 --pretty=%B | grep -qE "^feat:"; then
-          increment="minor"
-        elif git log -1 --pretty=%B | grep -qE "^break:"; then
-          increment="major"
-        fi
-        
-        echo "increment=$increment" >> $GITHUB_OUTPUT
-
-    - name: Bump Version
-      id: bump_version
-      uses: christian-konrad/gh-action-bump-version@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.SECRET_TOKEN }}
+    - name: Bump version and push tag
+      id: tag_version
+      uses: mathieudutour/github-tag-action@v6.1
       with:
-        version-type: ${{ steps.version.outputs.increment }}
+        github_token: ${{ secrets.SECRET_TOKEN }}
+        default_bump: patch
+        tag_prefix: v
 
     - name: Install PlatformIO
       run: pip install --upgrade platformio
@@ -53,7 +40,7 @@ jobs:
       uses: softprops/action-gh-release@v1
       with:
         files: .pio/build/station/firmware.bin
-        tag_name: ${{ steps.bump_version.outputs.newTag }}
+        tag_name: ${{ steps.tag_version.outputs.new_tag }}
         generate_release_notes: true
 
     - name: Upload Artifact
