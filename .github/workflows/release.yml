@@ -1,87 +1,63 @@
-name: Create Release and Build Firmware
+name: Automated Firmware Release
 
 on:
   push:
     branches:
-      - deployment
+      - main
+      - test
 
 jobs:
-  build:
-    name: Build and Release Firmware
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    
-    - uses: actions/cache@v4
+    - uses: actions/checkout@v4
       with:
-        path: |
-          ~/.cache/pip
-          ~/.platformio/.cache
-        key: ${{ runner.os }}-pio
+        fetch-depth: 0
+
     - uses: actions/setup-python@v5
       with:
         python-version: '3.11'
-    
-    - name: Install PlatformIO Core
-      run: pip install --upgrade platformio
 
-    - name: Fetch all tags
-      run: git fetch --tags
-      
-    - name: Calculate next version
+    - name: Determine Version Increment
       id: version
       run: |
-          last_version=$(git describe --tags --abbrev=0 || echo "v0.0.0")
-          echo "Last version: $last_version"
+        increment="patch"
+        
+        if git log -1 --pretty=%B | grep -qE "^feat:"; then
+          increment="minor"
+        elif git log -1 --pretty=%B | grep -qE "^break:"; then
+          increment="major"
+        fi
+        
+        echo "increment=$increment" >> $GITHUB_OUTPUT
 
-          major=$(echo $last_version | cut -d. -f1 | sed 's/v//')
-          minor=$(echo $last_version | cut -d. -f2)
-          patch=$(echo $last_version | cut -d. -f3)
+    - name: Bump Version
+      id: bump_version
+      uses: christian-konrad/gh-action-bump-version@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.SECRET_TOKEN }}
+      with:
+        version-type: ${{ steps.version.outputs.increment }}
 
-          patch=$((patch + 1))
+    - name: Install PlatformIO
+      run: pip install --upgrade platformio
 
-          new_version="v$major.$minor.$patch"
-          echo "New version: $new_version"
-
-          echo "new_version=$new_version" >> $GITHUB_ENV
-          
-    - name: Build firmware
+    - name: Build Firmware
       run: pio run
 
-    - name: List build directory contents
-      run: ls -R .pio/build/
-
-    - name: Archive firmware binaries
-      run: |
-        mkdir artifacts
-        cp .pio/build/station/firmware.bin artifacts/station-firmware.bin
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
       with:
-        name: firmware-binaries
-        path: artifacts/
+        files: .pio/build/station/firmware.bin
+        tag_name: ${{ steps.bump_version.outputs.newTag }}
+        generate_release_notes: true
 
-    - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.SECRET_TOKEN }}
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
       with:
-        tag_name: ${{ env.new_version }}
-        release_name: "GPS:No Build ${{ env.new_version }}"
-        draft: false
-        prerelease: false
-
-    - name: Upload Firmware to Release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.SECRET_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/station-firmware.bin
-        asset_name: station-firmware.bin
-        asset_content_type: application/octet-stream
-
+        name: firmware
+        path: .pio/build/station/firmware.bin
