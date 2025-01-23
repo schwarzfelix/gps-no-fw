@@ -8,18 +8,29 @@
 #include "ConfigDefines.h"
 
 struct RuntimeConfig {
-    char deviceName[32];
-    char firmwareVersion[16];
-    char wifiSSID[32];
-    char wifiPassword[64];
-    char mqttBroker[64];
-    uint16_t mqttPort;
-    char mqttUser[32];
-    char mqttPassword[64];
-    uint32_t wifiCheckInterval;
-    uint32_t mqttRetryInterval;
-    uint64_t chipID;
-    char macAddress[18];
+    struct {
+        char name[32];
+        char firmwareVersion[16];
+        uint64_t chipID;
+        char macAddress[18];
+    } device;
+
+    struct {
+        char ssid[32];
+        char password[64];
+        bool autoReconnect;
+        uint8_t maxConnectionAttempts;
+        uint32_t reconnectInterval;
+        uint32_t checkInterval;
+    } wifi;
+
+    struct {
+        char broker[64];
+        uint16_t port;
+        char user[32];
+        char password[64];
+        uint32_t retryInterval;
+    } mqtt;
     
     struct {
         uint8_t maxRecoveryAttempts;
@@ -63,25 +74,6 @@ public:
     bool hasConfigDefinesChanged();
     void updateDeviceConfig();
     void print(RuntimeConfig* config);
-
-    const char* getDeviceName() const { return config.deviceName; }
-    const char* getFirmwareVersion() const { return config.firmwareVersion; }
-    const char* getWifiSSID() const { return config.wifiSSID; }
-    const char* getWifiPassword() const { return config.wifiPassword; }
-    const char* getMqttBroker() const { return config.mqttBroker; }
-    uint16_t getMqttPort() const { return config.mqttPort; }
-    const char* getMqttUser() const { return config.mqttUser; }
-    const char* getMqttPassword() const { return config.mqttPassword; }
-    uint32_t getMqttRetryInterval() const { return config.mqttRetryInterval; }
-    uint64_t getChipID() const { return config.chipID; }
-    const char* getMacAddress() const { return config.macAddress; }
-    const char* getHash() const { return config.hash; }
-    uint32_t getWifiCheckInterval() const { return config.wifiCheckInterval; }
-    uint8_t getErrorMaxRecoveryAttempts() const { return config.error.maxRecoveryAttempts; }
-    uint32_t getErrorRecoveryInterval() const { return config.error.recoveryInterval; }
-    bool getLoggingAllowMqttLog() const { return config.logging.allowMqttLog; }
-    const char* getLoggingMqttTopic() const { return config.logging.mqttTopic; }
-    uint8_t getLoggingLogLevel() const { return config.logging.logLevel; }
 };
 
 #endif

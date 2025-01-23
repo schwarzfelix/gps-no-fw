@@ -3,11 +3,11 @@
 void ConfigManager::loadDefaults() {
     setConfigFromDefines(&config);
 
-    config.chipID = ESP.getEfuseMac();
+    config.device.chipID = ESP.getEfuseMac();
 
     String mac = WiFi.macAddress();
-    mac.toCharArray(config.macAddress, sizeof(config.macAddress));
-    config.macAddress[sizeof(config.macAddress) - 1] = '\0';
+    mac.toCharArray(config.device.macAddress, sizeof(config.device.macAddress));
+    config.device.macAddress[sizeof(config.device.macAddress) - 1] = '\0';
 
     String hash = calculateHash(&config);
     strncpy(config.hash, hash.c_str(), sizeof(config.hash) - 1);
@@ -15,17 +15,21 @@ void ConfigManager::loadDefaults() {
 }
 
 void ConfigManager::print(RuntimeConfig* config) {
-    Serial.printf("Device Name: %s\n", config->deviceName);
-    Serial.printf("Firmware Version: %s\n", config->firmwareVersion);
-    Serial.printf("WiFi SSID: %s\n", config->wifiSSID);
-    Serial.printf("WiFi Password: %s\n", config->wifiPassword);
-    Serial.printf("MQTT Broker: %s\n", config->mqttBroker);
-    Serial.printf("MQTT Port: %d\n", config->mqttPort);
-    Serial.printf("MQTT User: %s\n", config->mqttUser);
-    Serial.printf("MQTT Password: %s\n", config->mqttPassword);
-    Serial.printf("MQTT Retry Interval: %d\n", config->mqttRetryInterval);
-    Serial.printf("Chip ID: %llu\n", config->chipID);
-    Serial.printf("MAC Address: %s\n", config->macAddress);
+    Serial.printf("Device Name: %s\n", config->device.name);
+    Serial.printf("Firmware Version: %s\n", config->device.firmwareVersion);
+    Serial.printf("WiFi SSID: %s\n", config->wifi.ssid);
+    Serial.printf("WiFi Password: %s\n", config->wifi.password);
+    Serial.printf("WiFi Auto Reconnect: %s\n", config->wifi.autoReconnect ? "true" : "false");
+    Serial.printf("WiFi Check Interval: %d\n", config->wifi.checkInterval);
+    Serial.printf("WiFi Reconnect Interval: %d\n", config->wifi.reconnectInterval);
+    Serial.printf("WiFi Max Connection Attempts: %d\n", config->wifi.maxConnectionAttempts);
+    Serial.printf("MQTT Broker: %s\n", config->mqtt.broker);
+    Serial.printf("MQTT Port: %d\n", config->mqtt.port);
+    Serial.printf("MQTT User: %s\n", config->mqtt.user);
+    Serial.printf("MQTT Password: %s\n", config->mqtt.password);
+    Serial.printf("MQTT Retry Interval: %d\n", config->mqtt.retryInterval);
+    Serial.printf("Chip ID: %llu\n", config->device.chipID);
+    Serial.printf("MAC Address: %s\n", config->device.macAddress);
     Serial.printf("Error Max Recovery Attempts: %d\n", config->error.maxRecoveryAttempts);
     Serial.printf("Error Recovery Interval: %d\n", config->error.recoveryInterval);
     Serial.printf("Logging Allow MQTT Log: %s\n", config->logging.allowMqttLog ? "true" : "false");
@@ -39,14 +43,14 @@ String ConfigManager::calculateHash(RuntimeConfig* config) {
     md5.begin();
     
     String configString = 
-        String(config->deviceName) +
-        String(config->wifiSSID) +
-        String(config->wifiPassword) +
-        String(config->mqttBroker) +
-        String(config->mqttPort) +
-        String(config->mqttUser) +
-        String(config->mqttPassword) +
-        String(config->mqttRetryInterval);
+        String(config->device.name) +
+        String(config->wifi.ssid) +
+        String(config->wifi.password) +
+        String(config->mqtt.broker) +
+        String(config->mqtt.port) +
+        String(config->mqtt.user) +
+        String(config->mqtt.password) +
+        String(config->mqtt.retryInterval);
 
     md5.add(configString);
     md5.calculate();
@@ -73,11 +77,13 @@ bool ConfigManager::begin() {
         Serial.println(F("Warning: Low storage space"));
     }
 
-    if(!loadFromFlash()) {
-        Serial.println(F("Failed to load config from flash, using defaults"));        
-        if (!saveToFlash()) {
-            Serial.println(F("Failed to save defaults to flash"));
-            return false;
+    if(!DEBUG_FORCE_CONFIG){
+        if(!loadFromFlash()) {
+            Serial.println(F("Failed to load config from flash, using defaults"));        
+            if (!saveToFlash()) {
+                Serial.println(F("Failed to save defaults to flash"));
+                return false;
+            }
         }
     }
 
@@ -87,31 +93,41 @@ bool ConfigManager::begin() {
 
 void ConfigManager::setConfigFromDefines(RuntimeConfig* config) {
     memset(config, 0, sizeof(RuntimeConfig));
-    strncpy(config->deviceName, DEVICE_NAME, sizeof(config->deviceName) - 1);
-    config->deviceName[sizeof(config->deviceName) - 1] = '\0';
+    /* #### DEVICE ####*/
+    strncpy(config->device.name, DEVICE_NAME, sizeof(config->device.name) - 1);
+    config->device.name[sizeof(config->device.name) - 1] = '\0';
 
-    strncpy(config->wifiSSID, WIFI_SSID, sizeof(config->wifiSSID) - 1);
-    config->wifiSSID[sizeof(config->wifiSSID) - 1] = '\0';
+    /* #### WIFI ####*/
+    strncpy(config->wifi.ssid, WIFI_SSID, sizeof(config->wifi.ssid) - 1);
+    config->wifi.ssid[sizeof(config->wifi.ssid) - 1] = '\0';
 
-    strncpy(config->wifiPassword, WIFI_PASSWORD, sizeof(config->wifiPassword) - 1);
-    config->wifiPassword[sizeof(config->wifiPassword) - 1] = '\0';
+    strncpy(config->wifi.password, WIFI_PASSWORD, sizeof(config->wifi.password) - 1);
+    config->wifi.password[sizeof(config->wifi.password) - 1] = '\0';
 
-    strncpy(config->mqttBroker, MQTT_BROKER, sizeof(config->mqttBroker) - 1);
-    config->mqttBroker[sizeof(config->mqttBroker) - 1] = '\0';
+    config->wifi.autoReconnect = WIFI_AUTO_RECONNECT;
+    config->wifi.checkInterval = WIFI_CHECK_INTERVAL;
+    config->wifi.reconnectInterval = WIFI_RECONNECT_INTERVAL;
+    config->wifi.maxConnectionAttempts = WIFI_MAX_CONNECTION_ATTEMPTS;
 
-    config->mqttPort = MQTT_PORT;
+    /* #### MQTT ####*/
+    strncpy(config->mqtt.broker, MQTT_BROKER, sizeof(config->mqtt.broker) - 1);
+    config->mqtt.broker[sizeof(config->mqtt.broker) - 1] = '\0';
 
-    strncpy(config->mqttUser, MQTT_USER, sizeof(config->mqttUser) - 1);
-    config->mqttUser[sizeof(config->mqttUser) - 1] = '\0';
+    config->mqtt.port = MQTT_PORT;
 
-    strncpy(config->mqttPassword, MQTT_PASSWORD, sizeof(config->mqttPassword) - 1);
-    config->mqttPassword[sizeof(config->mqttPassword) - 1] = '\0';
+    strncpy(config->mqtt.user, MQTT_USER, sizeof(config->mqtt.user) - 1);
+    config->mqtt.user[sizeof(config->mqtt.user) - 1] = '\0';
 
-    config->mqttRetryInterval = MQTT_RETRY_INTERVAL;
+    strncpy(config->mqtt.password, MQTT_PASSWORD, sizeof(config->mqtt.password) - 1);
+    config->mqtt.password[sizeof(config->mqtt.password) - 1] = '\0';
 
+    config->mqtt.retryInterval = MQTT_RETRY_INTERVAL;
+
+    /* #### ERROR ####*/
     config->error.maxRecoveryAttempts = ERROR_MAX_RECOVERY_ATTEMPTS;
     config->error.recoveryInterval = ERROR_RECOVERY_INTERVAL;
 
+    /* #### LOGGING ####*/
     config->logging.allowMqttLog = LOGGING_ALLOW_MQTT_LOG;
     config->logging.logLevel = LOGGING_LEVEL;
 
