@@ -4,6 +4,9 @@
 #include <Device.h>
 #include <WiFi.h>
 #include <Logger.h>
+#include <WifiManager.h>
+#include "states/ErrorState.h"
+#include "states/ActionState.h"
 
 class SetupState : public DeviceState {
 private:
@@ -11,10 +14,12 @@ private:
         : DeviceState(device, StateIdentifier::SETUP_STATE)
         , log(Logger::getInstance())
         , configManager(ConfigManager::getInstance())
+        , wifiManager(WifiManager::getInstance())
         , lastWifiCheck(0)
         , isWifiConnected(false) {};
     Logger& log;
     ConfigManager& configManager;
+    WifiManager& wifiManager;
     uint32_t lastWifiCheck;
     bool isWifiConnected;
 

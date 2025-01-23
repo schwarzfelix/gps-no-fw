@@ -2,7 +2,6 @@
 #define ERROR_STATE_H
 
 #include <Device.h>
-#include <Logger.h>
 
 enum class ErrorCode {
     BOOT_FAILED,
@@ -14,7 +13,7 @@ enum class ErrorCode {
 
 class ErrorState : public DeviceState {
 private:
-    ErrorState(Device* device, ErrorCode errorCode) 
+    ErrorState(Device* device) 
         : DeviceState(device, StateIdentifier::ERROR_STATE)
         , errorCode(ErrorCode::UNKNOWN_ERROR)
         , log(Logger::getInstance())
@@ -33,8 +32,8 @@ public:
     ErrorState(const ErrorState&) = delete;
     void operator=(const ErrorState&) = delete;
 
-    static ErrorState& getInstance(Device* device, ErrorCode errorCode) {
-        static ErrorState instance(device, errorCode);
+    static ErrorState& getInstance(Device* device) {
+        static ErrorState instance(device);
         return instance;
     }
 

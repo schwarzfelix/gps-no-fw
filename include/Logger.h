@@ -17,8 +17,8 @@ class Logger {
 private:
     Logger () 
         : configManager(ConfigManager::getInstance())
-        , deviceId(configManager.getDeviceName())
-        , logLevel(static_cast<LogLevel>(configManager.getLoggingLogLevel()))
+        , deviceId(configManager.getRuntimeConfig().device.name)
+        , logLevel(static_cast<LogLevel>(configManager.getRuntimeConfig().logging.logLevel))
     {}
 
     PubSubClient* mqttClient;
@@ -29,7 +29,7 @@ private:
 
     const char* getLogLevelString(LogLevel level);
     bool isLogLevelEnabled(LogLevel level);
-    constexpr size_t getLogLevelCount() { return static_cast<size_t>(LogLevel::__DELIMITER__); }
+    constexpr size_t getLogLevelCount() {return static_cast<size_t>(LogLevel::__DELIMITER__);};
 
 public:
     static Logger& getInstance() {
@@ -43,6 +43,7 @@ public:
     void error(const char* source, const char* message);
     void debug(const char* source, const char* message);
     void setLogLevel(LogLevel level) { logLevel = level; };
+
     LogLevel getLogLevel() { return logLevel; };
     const char* getLogLevelString() { return getLogLevelString(logLevel); };
 };

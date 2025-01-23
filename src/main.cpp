@@ -16,6 +16,7 @@ void setup() {
   Serial.println(F("###################################################"));
 
   ConfigManager& configManager = ConfigManager::getInstance();
+  RuntimeConfig& config = configManager.getRuntimeConfig();
   Logger& log = Logger::getInstance();
   Device& device = Device::getInstance();
 

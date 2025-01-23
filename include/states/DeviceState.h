@@ -4,9 +4,11 @@
 class Device;
 
 enum class StateIdentifier {
+    ACTION_STATE,
     IDLE_STATE,
     SETUP_STATE,
-    ERROR_STATE
+    ERROR_STATE,
+    __DELIMITER__
 };
 
 class DeviceState {
@@ -27,6 +29,7 @@ public:
     virtual void update() = 0;
 
     StateIdentifier getStateIdentifier() const { return stateIdentifier; };
+    constexpr size_t getStateIdentifierCount() { return static_cast<size_t>(StateIdentifier::__DELIMITER__); };
     const char* getStateIdentifierString() const {
         switch (stateIdentifier) {
             case StateIdentifier::IDLE_STATE: return "IDLE_STATE";
