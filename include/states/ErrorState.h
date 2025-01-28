@@ -8,7 +8,8 @@ enum class ErrorCode {
     CONFIG_INVALID,
     WIFI_CONNECTION_FAILED,
     MQTT_CONNECTION_FAILED,
-    UNKNOWN_ERROR
+    UNKNOWN_ERROR,
+    __DELIMITER__
 };
 
 class ErrorState : public DeviceState {
@@ -18,6 +19,7 @@ private:
         , errorCode(ErrorCode::UNKNOWN_ERROR)
         , log(Logger::getInstance())
         , configManager(ConfigManager::getInstance()) {};
+    
     Logger& log;
     ConfigManager& configManager;
     ErrorCode errorCode;
@@ -27,6 +29,7 @@ private:
     unsigned long lastRecoveryAttempt;
 
     const char* getErrorCodeString(ErrorCode errorCode);
+    constexpr size_t getErrorCodeCount() {return static_cast<size_t>(ErrorCode::__DELIMITER__);};
 
 public:
     ErrorState(const ErrorState&) = delete;

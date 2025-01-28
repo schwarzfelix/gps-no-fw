@@ -9,6 +9,7 @@ private:
         : DeviceState(device, StateIdentifier::IDLE_STATE)
         , log(Logger::getInstance())
         , configManager(ConfigManager::getInstance()) {};
+    
     Logger& log;
     ConfigManager& configManager;
 

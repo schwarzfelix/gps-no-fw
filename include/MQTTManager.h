@@ -33,7 +33,7 @@ private:
     PubSubClient client;
     bool initialized;
     uint32_t lastAttempt;
-    uint8_t connectionAttemts;
+    uint8_t connectionAttempts;
     String clientId;
     std::vector<Subscription> subscriptions;
     Logger& log;

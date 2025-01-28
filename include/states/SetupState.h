@@ -4,9 +4,19 @@
 #include <Device.h>
 #include <WiFi.h>
 #include <Logger.h>
-#include "../WifiManager.h"
+#include "WifiManager.h"
+#include "MqttManager.h"
 #include "states/ErrorState.h"
 #include "states/ActionState.h"
+
+enum class SetupPhase {
+    INIT,
+    WIFI_CONNECTING,
+    MQTT_CONNECTING,
+    COMPLETED,
+    FAILED,
+    __DELIMITER__
+};
 
 class SetupState : public DeviceState {
 private:
@@ -15,15 +25,30 @@ private:
         , log(Logger::getInstance())
         , configManager(ConfigManager::getInstance())
         , wifiManager(WifiManager::getInstance())
-        , lastWifiCheck(0)
-        , isWifiConnected(false) 
-        , lastWifiStatus(WifiStatus::UNINITIALIZED){};
+        , mqttManager(MQTTManager::getInstance()) {};
+
     Logger& log;
     ConfigManager& configManager;
     WifiManager& wifiManager;
-    uint32_t lastWifiCheck;
-    bool isWifiConnected;
-    WifiStatus lastWifiStatus;
+    MQTTManager& mqttManager;
+
+    static const uint32_t SETUP_TIMEOUT = 60000;
+    SetupPhase currentPhase;
+    uint32_t setupStateTime;
+
+    uint8_t mqttConnectionAttempts;
+
+    bool initializeManagers();
+    void handleWifiConnection();
+    void handleMqttConnection();
+    void handleConnectionError(const char* message);
+    void handleSetupFailure();
+    void subscribeDefaultTopics();
+    void handleDeviceMessage(const char* topic, const uint8_t* payload, unsigned int length);
+    void handleConfigMessage(const char* topic, const uint8_t* payload, unsigned int length);
+
+    const char* getSetupPhaseString(SetupPhase phase);
+    constexpr size_t getSetupPhaseCount() {return static_cast<size_t>(SetupPhase::__DELIMITER__);};
 
 public:
     SetupState(const SetupState&) = delete;

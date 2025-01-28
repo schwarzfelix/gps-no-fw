@@ -6,12 +6,26 @@
 #include "states/SetupState.h"
 #include "Logger.h"
 
+enum class DeviceStatus {
+    BOOTING,
+    IDLE,
+    SETUP,
+    TRANSITIONING,
+    ACTION,
+    ERROR,
+    __DELIMITER__
+};
+
 class DeviceState;
 
 class Device {
 private:
     Device() : currentState(nullptr) {}
+    
     DeviceState* currentState;
+
+    const char* getDeviceStatusString(DeviceStatus status);
+    constexpr size_t getDeviceStatusCount() {return static_cast<size_t>(DeviceStatus::__DELIMITER__);};
 
 public:
     Device(const Device&) = delete;
@@ -24,6 +38,8 @@ public:
 
     void changeState(DeviceState& newState);
     void update();
+
+    const char* getDeviceStatusString();
 };
 
 #endif

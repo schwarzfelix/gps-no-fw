@@ -41,10 +41,11 @@ bool WifiManager::connect() {
 
     RuntimeConfig& config = configManager.getRuntimeConfig();
 
-    log.debug("WifiManager", "Attempting to connect to Wifi...");
-    Serial.printf("%s (%d)\n", config.wifi.ssid, strlen(config.wifi.ssid));
-    Serial.printf("%s (%d)\n", config.wifi.password, strlen(config.wifi.password));
-    WiFi.setMinSecurity(WIFI_AUTH_WPA_PSK); 
+    char msgBuffer[256];
+    snprintf(msgBuffer, sizeof(msgBuffer), "Attempting to connect to Wifi-AP '%s' (['%s', %d], ['%s', %d])", config.wifi.ssid, config.wifi.ssid, strlen(config.wifi.ssid), config.wifi.password, strlen(config.wifi.password));
+    log.debug("WifiManager", msgBuffer);
+
+    //WiFi.setMinSecurity(WIFI_AUTH_WEP); 
     WiFi.begin(config.wifi.ssid, config.wifi.password);
 
     status = WifiStatus::CONNECTING;

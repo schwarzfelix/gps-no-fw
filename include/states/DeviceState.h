@@ -13,11 +13,12 @@ enum class StateIdentifier {
 
 class DeviceState {
 protected:
-    Device* device;
-    StateIdentifier stateIdentifier;
     DeviceState(Device* device, StateIdentifier stateIdentifier) 
         : device(device)
         , stateIdentifier(stateIdentifier) {};
+
+    Device* device;
+    StateIdentifier stateIdentifier;
 
 public:
     DeviceState(const DeviceState&) = delete;
