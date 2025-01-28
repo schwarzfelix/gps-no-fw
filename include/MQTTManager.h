@@ -22,12 +22,18 @@ private:
         , initialized(false)
         , lastAttempt(0)
         , log(Logger::getInstance())
-        , configManager(ConfigManager::getInstance()) {}
+        , configManager(ConfigManager::getInstance()) {
+             
+        client.setCallback([this](char* topic, uint8_t* payload, unsigned int length) {
+            this->handleCallback(topic, payload, length);
+        });
+    }
 
     WiFiClient espClient;
     PubSubClient client;
     bool initialized;
     uint32_t lastAttempt;
+    uint8_t connectionAttemts;
     String clientId;
     std::vector<Subscription> subscriptions;
     Logger& log;
@@ -55,6 +61,7 @@ public:
     bool isConnected();
 
     PubSubClient& getClient() { return client; }
+    String getClientId() { return clientId; }
 };
 
 #endif

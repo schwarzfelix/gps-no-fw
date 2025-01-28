@@ -70,7 +70,10 @@ bool MQTTManager::connect(){
         return true;
     }
 
-    log.debug("MQTTManager", "Attempting to connect to MQTT broker...");
+    char msgBuffer[256];
+    snprintf(msgBuffer, sizeof(msgBuffer), "Attempting to connect to MQTT-Broker '%s' (['%s', %d], ['%s', %d])", config.mqtt.broker, config.mqtt.user, strlen(config.mqtt.user), config.mqtt.password, strlen(config.mqtt.password));
+    log.debug("MQTTManager", msgBuffer);
+
     bool connectionResult;
     if(strlen(config.mqtt.user) > 0) {
         connectionResult = client.connect(clientId.c_str(), config.mqtt.user, config.mqtt.password);
