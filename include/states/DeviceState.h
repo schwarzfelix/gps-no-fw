@@ -36,6 +36,7 @@ public:
             case StateIdentifier::IDLE_STATE: return "IDLE_STATE";
             case StateIdentifier::SETUP_STATE: return "SETUP_STATE";
             case StateIdentifier::ERROR_STATE: return "ERROR_STATE";
+            case StateIdentifier::ACTION_STATE: return "ACTION_STATE";
             default: return "UNKNOWN";
         }
     };

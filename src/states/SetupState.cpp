@@ -41,12 +41,6 @@ void SetupState::update() {
 
 void SetupState::exit() {
     log.debug("SetupState", "Exiting SetupState");
-
-    if(mqttManager.isConnected()) {
-        RuntimeConfig& config = configManager.getRuntimeConfig();
-        String topic = config.mqtt.baseTopic + String(config.device.chipID) + "/status";
-        mqttManager.publish(topic.c_str(), "online", true);
-    }
 }
 
 bool SetupState::initializeManagers() {
@@ -79,7 +73,7 @@ void SetupState::handleWifiConnection(){
         case WifiStatus::CONNECTION_FAILED:
         case WifiStatus::WRONG_PASSWORD:
         case WifiStatus::NO_SSID_AVAILABLE:
-            handleConnectionError("WiFi connection failed");
+            handleConnectionError("WiFi connection failed", ErrorCode::WIFI_CONNECTION_FAILED);
             break;
             
         default:
@@ -96,7 +90,7 @@ void SetupState::handleMqttConnection() {
             mqttConnectionAttempts++;
 
             if (mqttConnectionAttempts >= config.mqtt.maxConnectionAttempts) {
-                handleConnectionError("MQTT connection failed");
+                handleConnectionError("MQTT connection failed", ErrorCode::MQTT_CONNECTION_FAILED);
                 return;
             }
             delay(500); 
@@ -110,13 +104,13 @@ void SetupState::handleMqttConnection() {
 
 void SetupState::subscribeDefaultTopics() {
     RuntimeConfig& config = configManager.getRuntimeConfig();
-    String deviceTopic = config.mqtt.baseTopic + String(config.device.chipID) + "/#";
+    String deviceTopic = String(mqttManager.getDeviceTopic()) + "/#";
     
     mqttManager.subscribe(deviceTopic.c_str(), [this](const char* topic, const uint8_t* payload, unsigned int length) {
         handleDeviceMessage(topic, payload, length);
     });
 
-    String configTopic = config.mqtt.baseTopic + String(config.device.chipID) + "/config";
+    String configTopic = String(mqttManager.getDeviceTopic())  + "/config";
     mqttManager.subscribe(configTopic.c_str(), [this](const char* topic, const uint8_t* payload, unsigned int length) {
         handleConfigMessage(topic, payload, length);
     });
@@ -127,7 +121,7 @@ void SetupState::handleDeviceMessage(const char* topic, const uint8_t* payload, 
     memcpy(message, payload, length);
     message[length] = '\0';
     
-    char logMessage[128];
+    char logMessage[1024];
     snprintf(logMessage, sizeof(logMessage), "Received message on topic %s: %s", topic, message);
     log.debug("SetupState", logMessage);
 }
@@ -138,12 +132,11 @@ void SetupState::handleConfigMessage(const char* topic, const uint8_t* payload, 
     message[length] = '\0';
     
     log.info("SetupState", "Received config update");
-    // Hier könnte die Konfiguration verarbeitet werden
 }
 
-void SetupState::handleConnectionError(const char* message) {
+void SetupState::handleConnectionError(const char* message, ErrorCode errorCode) {
     log.error("SetupState", message);
-    ErrorState::getInstance(device).setError(ErrorCode::UNKNOWN_ERROR, this, message);
+    ErrorState::getInstance(device).setError(errorCode, this, message);
     currentPhase = SetupPhase::FAILED;
 }
 

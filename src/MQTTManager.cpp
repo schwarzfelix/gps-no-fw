@@ -1,38 +1,46 @@
 #include "MQTTManager.h"
 
-void MQTTManager::handleCallback(char* topic , uint8_t* payload, uint32_t length) {
-    char msgBuffer[1024];
-    snprintf(msgBuffer, sizeof(msgBuffer), "Received message ('%s', '%s')", topic, payload);
+void MQTTManager::handleCallback(char* topic, uint8_t* payload, uint32_t length) {
+    char* message = new char[length + 1];
+    memcpy(message, payload, length);
+    message[length] = '\0';
+    
+    char msgBuffer[128];
+    snprintf(msgBuffer, sizeof(msgBuffer), "Received message on topic '%s': '%s'", topic, message);
     log.debug("MQTTManager", msgBuffer);
 
+    //log.debug("MQTTManager", "Checking subscriptions:");
     for(const auto& subscription : subscriptions) {
+        char subBuffer[128];
+        snprintf(subBuffer, sizeof(subBuffer), "Checking against subscription: '%s'", subscription.topic.c_str());
+        //log.debug("MQTTManager", subBuffer);
+        
         if(matchTopic(subscription.topic.c_str(), topic)) {
+            log.debug("MQTTManager", "Topic match found - executing callback");
             subscription.callback(topic, payload, length);
         }
     }
+    
+    delete[] message;
 }
 
 bool MQTTManager::matchTopic(const char* pattern, const char* topic) {
-    const char* patternPtr = pattern;
-    const char* topicPtr = topic;
-
-    while(*patternPtr && *topicPtr) {
-        if(*patternPtr == '+'){
-            while (*topicPtr && *topicPtr != '/') {
-                topicPtr++;
-            }
-            patternPtr++;
-        } else if (*patternPtr == '#'){
-            return true;
-        } else if (*patternPtr != *topicPtr) {
-            return false;
-        } else {
-            patternPtr++;
-            topicPtr++;
+    while (*pattern && *topic) {
+        if (*pattern == '+') {
+            while (*topic && *topic != '/') topic++;
+            pattern++;
+            if (*topic) topic++;
+            if (*pattern) pattern++;
+            continue;
         }
+        if (*pattern == '#') {
+            return true;
+        }
+        if (*pattern != *topic) return false;
+        pattern++;
+        topic++;
     }
-
-    return *patternPtr == *topicPtr;
+    return *pattern == *topic;
 }
 
 bool MQTTManager::begin(){
@@ -50,9 +58,15 @@ bool MQTTManager::begin(){
         return false;
     }
 
-    clientId = String(config.device.name) + "-" + String((uint32_t)config.device.chipID, HEX);
+    initializeDeviceTopic();
+
+    snprintf(clientId, sizeof(clientId), "%s-%x", config.device.name, static_cast<uint32_t>(config.device.chipID));
 
     client.setServer(config.mqtt.broker, config.mqtt.port);
+    client.setCallback([this](char* topic, byte* payload, unsigned int length) {
+        handleCallback(topic, payload, length);
+    });
+    
     initialized = true;
 
     return true;
@@ -76,9 +90,9 @@ bool MQTTManager::connect(){
 
     bool connectionResult;
     if(strlen(config.mqtt.user) > 0) {
-        connectionResult = client.connect(clientId.c_str(), config.mqtt.user, config.mqtt.password);
+        connectionResult = client.connect(clientId, config.mqtt.user, config.mqtt.password);
     } else {
-        connectionResult = client.connect(clientId.c_str());
+        connectionResult = client.connect(clientId);
     }
 
     if (connectionResult) {
@@ -157,19 +171,30 @@ bool MQTTManager::unsubscribe(const char* topic){
     return false;
 }
 
-bool MQTTManager::publish(const char* topic, const char* payload, bool retained) {
+bool MQTTManager::publish(const char* subtopic, const char* payload, bool retained, bool isAbsoluteTopic) {
     if(!client.connected()) {
         log.error("MQTTManager", "MQTT client not connected");
         return false;
     }
 
-    if(client.publish(topic, payload, retained)){
+    char fullTopic[512];
+    if (isAbsoluteTopic) {
+        strncpy(fullTopic, subtopic, sizeof(fullTopic) - 1);
+    } else {
+        snprintf(fullTopic, sizeof(fullTopic), "%s/%s", deviceTopic, subtopic);
+    }
+    fullTopic[sizeof(fullTopic) - 1] = '\0';
+
+    if(client.publish(fullTopic, payload, retained)){
         char msgBuffer[128];
-        snprintf(msgBuffer, sizeof(msgBuffer), "Published message ('%s', '%s')", topic, payload);
+        snprintf(msgBuffer, sizeof(msgBuffer), "Published message ('%s', '%s')", fullTopic, payload);
         log.debug("MQTTManager", msgBuffer);
         return true;
     }
 
+    char msgBuffer[128];
+    snprintf(msgBuffer, sizeof(msgBuffer), "Failed to publish message to topic: %s", fullTopic);
+    log.error("MQTTManager", msgBuffer);
     return false;
 }
 
@@ -195,4 +220,9 @@ void MQTTManager::update(){
 
 bool MQTTManager::isConnected(){
     return client.connected();
-}   
+}
+
+void MQTTManager::initializeDeviceTopic() {
+    RuntimeConfig& config = configManager.getRuntimeConfig();
+    snprintf(deviceTopic, sizeof(deviceTopic), "%s/%u", config.mqtt.baseTopic, static_cast<uint32_t>(config.device.chipID));
+}

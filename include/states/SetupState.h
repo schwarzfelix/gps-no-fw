@@ -8,6 +8,7 @@
 #include "MqttManager.h"
 #include "states/ErrorState.h"
 #include "states/ActionState.h"
+#include "ErrorCodes.h"
 
 enum class SetupPhase {
     INIT,
@@ -41,7 +42,7 @@ private:
     bool initializeManagers();
     void handleWifiConnection();
     void handleMqttConnection();
-    void handleConnectionError(const char* message);
+    void handleConnectionError(const char* message, ErrorCode errorCode);
     void handleSetupFailure();
     void subscribeDefaultTopics();
     void handleDeviceMessage(const char* topic, const uint8_t* payload, unsigned int length);

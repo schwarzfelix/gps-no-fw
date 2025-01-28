@@ -5,6 +5,8 @@ void ActionState::enter() {
 }
 
 void ActionState::update() {
+    MQTTManager::getInstance().update();
+
 }
 
 void ActionState::exit() {

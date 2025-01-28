@@ -22,25 +22,23 @@ private:
         , initialized(false)
         , lastAttempt(0)
         , log(Logger::getInstance())
-        , configManager(ConfigManager::getInstance()) {
-             
-        client.setCallback([this](char* topic, uint8_t* payload, unsigned int length) {
-            this->handleCallback(topic, payload, length);
-        });
-    }
+        , configManager(ConfigManager::getInstance()) {}
+
+    Logger& log;
+    ConfigManager& configManager;
 
     WiFiClient espClient;
     PubSubClient client;
     bool initialized;
     uint32_t lastAttempt;
     uint8_t connectionAttempts;
-    String clientId;
     std::vector<Subscription> subscriptions;
-    Logger& log;
-    ConfigManager& configManager;
+    char deviceTopic[128];
+    char clientId[64];
 
     void handleCallback(char* topic, uint8_t* payload, uint32_t length);
     bool matchTopic(const char* pattern, const char* topic);
+    void initializeDeviceTopic();
 
 public:
     MQTTManager(const MQTTManager&) = delete;
@@ -56,12 +54,13 @@ public:
     void disconnect();
     bool subscribe(const char* topic, MQTTCallback callback);
     bool unsubscribe(const char* topic);
-    bool publish(const char* topic, const char* payload, bool retained = false);
+    bool publish(const char* topic, const char* payload, bool retained = false, bool isAbsoluteTopic = false);
     void update();
     bool isConnected();
 
     PubSubClient& getClient() { return client; }
-    String getClientId() { return clientId; }
+    const char* getClientId() { return clientId; }
+    const char* getDeviceTopic() { return deviceTopic; }
 };
 
 #endif
