@@ -2,6 +2,7 @@
 #define CONFIG_DEFINES_H
 
 #define DEVICE_NAME ""
+#define DEVICE_HEARTBEAT_INTERVAL 60000
 
 #define WIFI_SSID ""
 #define WIFI_PASSWORD ""

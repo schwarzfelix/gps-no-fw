@@ -13,6 +13,7 @@ struct RuntimeConfig {
         char firmwareVersion[16];
         uint64_t chipID;
         char macAddress[18];
+        uint32_t statusUpdateInterval;
     } device;
 
     struct {
