@@ -4,7 +4,9 @@
 #include "ConfigManager.h"
 #include "states/DeviceState.h"
 #include "states/SetupState.h"
+#include "MQTTManager.h"
 #include "Logger.h"
+#include <ArduinoJson.h>
 
 enum class DeviceStatus {
     BOOTING,
@@ -20,9 +22,22 @@ class DeviceState;
 
 class Device {
 private:
-    Device() : currentState(nullptr) {}
+    Device() 
+        : currentState(nullptr)
+        , lastStatusUpdate(0)
+        , mqttManager(MQTTManager::getInstance())
+        , configManager(ConfigManager::getInstance())
+        , log(Logger::getInstance()) {}
     
+    MQTTManager& mqttManager;
+    ConfigManager& configManager;
+    Logger& log;
+
+    static const size_t JSON_DOC_SIZE = 512;
     DeviceState* currentState;
+    uint32_t lastStatusUpdate;
+
+    void sendDeviceStatus();
 
     const char* getDeviceStatusString(DeviceStatus status);
     constexpr size_t getDeviceStatusCount() {return static_cast<size_t>(DeviceStatus::__DELIMITER__);};
@@ -38,8 +53,7 @@ public:
 
     void changeState(DeviceState& newState);
     void update();
-
-    const char* getDeviceStatusString();
+    DeviceState* getCurrentState() { return currentState; }
 };
 
 #endif
