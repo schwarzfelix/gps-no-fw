@@ -4,7 +4,7 @@
 #include <Device.h>
 #include <WiFi.h>
 #include <Logger.h>
-#include <WifiManager.h>
+#include "WifiManager.h"
 #include "states/ErrorState.h"
 #include "states/ActionState.h"
 
