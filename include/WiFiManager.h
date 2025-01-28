@@ -6,6 +6,7 @@
 #include "Logger.h"
 
 enum class WifiStatus {
+    UNINITIALIZED,
     DISCONNECTED,
     CONNECTING,
     CONNECTED, 
@@ -35,6 +36,9 @@ private:
     constexpr size_t getWifiStatusCount() {return static_cast<size_t>(WifiStatus::__DELIMITER__);};
 
 public:
+    WifiManager(const WifiManager&) = delete;
+    void operator=(const WifiManager&) = delete;
+
     static WifiManager& getInstance() {
         static WifiManager instance;
         return instance;

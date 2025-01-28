@@ -32,6 +32,9 @@ private:
     constexpr size_t getLogLevelCount() {return static_cast<size_t>(LogLevel::__DELIMITER__);};
 
 public:
+    Logger(const Logger&) = delete;
+    void operator=(const Logger&) = delete;
+
     static Logger& getInstance() {
         static Logger instance;
         return instance;

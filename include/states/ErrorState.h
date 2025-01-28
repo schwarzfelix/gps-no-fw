@@ -37,7 +37,7 @@ public:
         return instance;
     }
 
-    void setError(ErrorCode errorCode, DeviceState* sourceState, const char* errorMessage);
+    void setError(ErrorCode errorCode, DeviceState* sourceState, const char* message);
 
     void enter() override;
     void update() override;

@@ -16,12 +16,14 @@ private:
         , configManager(ConfigManager::getInstance())
         , wifiManager(WifiManager::getInstance())
         , lastWifiCheck(0)
-        , isWifiConnected(false) {};
+        , isWifiConnected(false) 
+        , lastWifiStatus(WifiStatus::UNINITIALIZED){};
     Logger& log;
     ConfigManager& configManager;
     WifiManager& wifiManager;
     uint32_t lastWifiCheck;
     bool isWifiConnected;
+    WifiStatus lastWifiStatus;
 
 public:
     SetupState(const SetupState&) = delete;

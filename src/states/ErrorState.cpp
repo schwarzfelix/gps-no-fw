@@ -12,6 +12,20 @@ void ErrorState::exit() {
     log.debug("ErrorState", "Exiting ErrorState");
 }
 
+void ErrorState::setError(ErrorCode errorCode, DeviceState* sourceState, const char* message) {
+    this->errorCode = errorCode;
+    this->sourceState = sourceState;
+    this->errorMessage = errorMessage;
+
+    char msgBuffer[1024];
+    snprintf(msgBuffer, sizeof(msgBuffer), "Error occurred: %s - %s", 
+                getErrorCodeString(errorCode), message);
+        log.error("ErrorState", msgBuffer);
+    
+    recoveryAttempts = 0;
+    lastRecoveryAttempt = millis();
+}
+
 const char* ErrorState::getErrorCodeString(ErrorCode errorCode) {
     switch (errorCode) {
         case ErrorCode::BOOT_FAILED:
