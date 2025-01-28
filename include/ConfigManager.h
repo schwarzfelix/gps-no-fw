@@ -30,6 +30,8 @@ struct RuntimeConfig {
         char user[32];
         char password[64];
         uint32_t retryInterval;
+        char baseTopic[64];
+        uint8_t maxConnectionAttempts;
     } mqtt;
     
     struct {
@@ -51,6 +53,7 @@ private:
     ConfigManager() : initialized(false) {
         loadDefaults();
     }
+    
     RuntimeConfig config;
     static constexpr const char* CONFIG_FILE = "/config.bin";
     bool initialized;

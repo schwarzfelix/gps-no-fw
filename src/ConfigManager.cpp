@@ -28,6 +28,7 @@ void ConfigManager::print(RuntimeConfig* config) {
     Serial.printf("MQTT User: %s\n", config->mqtt.user);
     Serial.printf("MQTT Password: %s\n", config->mqtt.password);
     Serial.printf("MQTT Retry Interval: %d\n", config->mqtt.retryInterval);
+    Serial.printf("MQTT Base Topic: %s\n", config->mqtt.baseTopic);
     Serial.printf("Chip ID: %llu\n", config->device.chipID);
     Serial.printf("MAC Address: %s\n", config->device.macAddress);
     Serial.printf("Error Max Recovery Attempts: %d\n", config->error.maxRecoveryAttempts);
@@ -93,46 +94,41 @@ bool ConfigManager::begin() {
 
 void ConfigManager::setConfigFromDefines(RuntimeConfig* config) {
     memset(config, 0, sizeof(RuntimeConfig));
-    /* #### DEVICE ####*/
-    strncpy(config->device.name, DEVICE_NAME, sizeof(config->device.name) - 1);
-    config->device.name[sizeof(config->device.name) - 1] = '\0';
 
-    /* #### WIFI ####*/
-    strncpy(config->wifi.ssid, WIFI_SSID, sizeof(config->wifi.ssid) - 1);
-    config->wifi.ssid[sizeof(config->wifi.ssid) - 1] = '\0';
+    /* Helper-Makro zur sicheren String-Kopie */
+    #define SAFE_STRLCPY(dest, src) strlcpy(dest, src, sizeof(dest))
 
-    strncpy(config->wifi.password, WIFI_PASSWORD, sizeof(config->wifi.password) - 1);
-    config->wifi.password[sizeof(config->wifi.password) - 1] = '\0';
+    /* #### DEVICE #### */
+    SAFE_STRLCPY(config->device.name, DEVICE_NAME);
 
+    /* #### WIFI #### */
+    SAFE_STRLCPY(config->wifi.ssid, WIFI_SSID);
+    SAFE_STRLCPY(config->wifi.password, WIFI_PASSWORD);
     config->wifi.autoReconnect = WIFI_AUTO_RECONNECT;
     config->wifi.checkInterval = WIFI_CHECK_INTERVAL;
     config->wifi.reconnectInterval = WIFI_RECONNECT_INTERVAL;
     config->wifi.maxConnectionAttempts = WIFI_MAX_CONNECTION_ATTEMPTS;
 
-    /* #### MQTT ####*/
-    strncpy(config->mqtt.broker, MQTT_BROKER, sizeof(config->mqtt.broker) - 1);
-    config->mqtt.broker[sizeof(config->mqtt.broker) - 1] = '\0';
-
+    /* #### MQTT #### */
+    SAFE_STRLCPY(config->mqtt.broker, MQTT_BROKER);
     config->mqtt.port = MQTT_PORT;
-
-    strncpy(config->mqtt.user, MQTT_USER, sizeof(config->mqtt.user) - 1);
-    config->mqtt.user[sizeof(config->mqtt.user) - 1] = '\0';
-
-    strncpy(config->mqtt.password, MQTT_PASSWORD, sizeof(config->mqtt.password) - 1);
-    config->mqtt.password[sizeof(config->mqtt.password) - 1] = '\0';
-
+    SAFE_STRLCPY(config->mqtt.user, MQTT_USER);
+    SAFE_STRLCPY(config->mqtt.password, MQTT_PASSWORD);
     config->mqtt.retryInterval = MQTT_RETRY_INTERVAL;
+    config->mqtt.maxConnectionAttempts = MQTT_MAX_CONNECTION_ATTEMPTS;
+    SAFE_STRLCPY(config->mqtt.baseTopic, MQTT_BASE_TOPIC);
 
-    /* #### ERROR ####*/
+    /* #### ERROR #### */
     config->error.maxRecoveryAttempts = ERROR_MAX_RECOVERY_ATTEMPTS;
     config->error.recoveryInterval = ERROR_RECOVERY_INTERVAL;
 
-    /* #### LOGGING ####*/
+    /* #### LOGGING #### */
     config->logging.allowMqttLog = LOGGING_ALLOW_MQTT_LOG;
     config->logging.logLevel = LOGGING_LEVEL;
+    SAFE_STRLCPY(config->logging.mqttTopic, LOGGING_MQTT_TOPIC);
 
-    strncpy(config->logging.mqttTopic, LOGGING_MQTT_TOPIC, sizeof(config->logging.mqttTopic) - 1);
-    config->logging.mqttTopic[sizeof(config->logging.mqttTopic) - 1] = '\0';
+    /* Makro entfernen, um Seiteneffekte zu vermeiden */
+    #undef SAFE_STRLCPY
 }
 
 bool ConfigManager::loadFromFlash() {
