@@ -8,6 +8,7 @@
 #include "MqttManager.h"
 #include "states/ErrorState.h"
 #include "states/ActionState.h"
+#include "states/UpdateState.h"
 #include "ErrorCodes.h"
 
 enum class SetupPhase {

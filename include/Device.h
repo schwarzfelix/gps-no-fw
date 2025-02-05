@@ -1,6 +1,14 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+#define VERSION_MAJOR 1
+#define VERSION_MINOR 0
+#define VERSION_PATCH 1
+#define VERSION_STRING STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH)
+
 #include "ConfigManager.h"
 #include "states/DeviceState.h"
 #include "states/SetupState.h"

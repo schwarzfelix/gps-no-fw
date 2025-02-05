@@ -8,6 +8,7 @@ enum class StateIdentifier {
     IDLE_STATE,
     SETUP_STATE,
     ERROR_STATE,
+    UPDATE_STATE,
     __DELIMITER__
 };
 
@@ -37,6 +38,7 @@ public:
             case StateIdentifier::SETUP_STATE: return "SETUP_STATE";
             case StateIdentifier::ERROR_STATE: return "ERROR_STATE";
             case StateIdentifier::ACTION_STATE: return "ACTION_STATE";
+            case StateIdentifier::UPDATE_STATE: return "UPDATE_STATE";
             default: return "UNKNOWN";
         }
     };
