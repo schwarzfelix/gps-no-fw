@@ -36,6 +36,10 @@ void ConfigManager::print(RuntimeConfig* config) {
     Serial.printf("Logging Allow MQTT Log: %s\n", config->logging.allowMqttLog ? "true" : "false");
     Serial.printf("Logging MQTT Topic: %s\n", config->logging.mqttTopic);
     Serial.printf("Logging Level: %d\n", config->logging.logLevel);
+    Serial.printf("Update API URL: %s\n", config->update.apiUrl);
+    Serial.printf("Update API Token: %s\n", config->update.apiToken);
+    Serial.printf("Update Interval: %d\n", config->update.interval);
+    Serial.printf("Update Initial Check: %s\n", config->update.initialCheck ? "true" : "false");
     Serial.printf("Config Hash: %s\n", config->hash);
 }
 
@@ -95,7 +99,6 @@ bool ConfigManager::begin() {
 void ConfigManager::setConfigFromDefines(RuntimeConfig* config) {
     memset(config, 0, sizeof(RuntimeConfig));
 
-    /* Helper-Makro zur sicheren String-Kopie */
     #define SAFE_STRLCPY(dest, src) strlcpy(dest, src, sizeof(dest))
 
     /* #### DEVICE #### */
@@ -128,7 +131,12 @@ void ConfigManager::setConfigFromDefines(RuntimeConfig* config) {
     config->logging.logLevel = LOGGING_LEVEL;
     SAFE_STRLCPY(config->logging.mqttTopic, LOGGING_MQTT_TOPIC);
 
-    /* Makro entfernen, um Seiteneffekte zu vermeiden */
+    /* #### UPDATE #### */
+    SAFE_STRLCPY(config->update.apiUrl, UPDATE_GITHUB_API_URL);
+    SAFE_STRLCPY(config->update.apiToken, UPDATE_GITHUB_API_TOKEN);
+    config->update.interval = UPDATE_INTERVAL;
+    config->update.initialCheck = UPDATE_INITIAL_CHECK;
+
     #undef SAFE_STRLCPY
 }
 

@@ -17,7 +17,7 @@
 #define MQTT_PASSWORD ""
 #define MQTT_RETRY_INTERVAL 5000
 #define MQTT_MAX_CONNECTION_ATTEMPTS 20
-#define MQTT_BASE_TOPIC "gpsno/devices/"
+#define MQTT_BASE_TOPIC "gpsno/devices"
 
 #define ERROR_MAX_RECOVERY_ATTEMPTS 3
 #define ERROR_RECOVERY_INTERVAL 5000
@@ -25,6 +25,11 @@
 #define LOGGING_LEVEL 0 // 0: DEBUG, 1: INFO, 2: WARNING, 3: ERROR
 #define LOGGING_ALLOW_MQTT_LOG true
 #define LOGGING_MQTT_TOPIC ""
+
+#define UPDATE_GITHUB_API_URL "https://api.github.com/repos/Legincy/gps-no-fw/releases/latest"
+#define UPDATE_GITHUB_API_TOKEN ""
+#define UPDATE_INTERVAL 10000
+#define UPDATE_INITIAL_CHECK true
 
 #define DEBUG_FORCE_CONFIG true
 #endif

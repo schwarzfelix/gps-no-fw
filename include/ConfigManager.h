@@ -46,6 +46,13 @@ struct RuntimeConfig {
         uint8_t logLevel;
     } logging;
 
+    struct {
+        char apiUrl[128];
+        char apiToken[128];
+        uint32_t interval;
+        bool initialCheck;
+    } update;
+
     char hash[33];
 };
 
