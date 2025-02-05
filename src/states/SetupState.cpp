@@ -47,7 +47,7 @@ void SetupState::exit() {
 
 bool SetupState::initializeManagers() {
     if(!wifiManager.begin()) {
-        log.error("SetupState", "Failed to initialize WifiManager");
+        log.error("SetupState", "Failed to initialize WiFiManager");
         return false;
     }
 
@@ -63,18 +63,18 @@ void SetupState::handleWifiConnection(){
      wifiManager.update();
     
     switch (wifiManager.getStatus()) {
-        case WifiStatus::DISCONNECTED:
+        case WiFiStatus::DISCONNECTED:
             wifiManager.connect();
             break;
             
-        case WifiStatus::CONNECTED:
+        case WiFiStatus::CONNECTED:
             log.info("SetupState", "WiFi connected, proceeding to MQTT setup");
             currentPhase = SetupPhase::MQTT_CONNECTING;
             break;
             
-        case WifiStatus::CONNECTION_FAILED:
-        case WifiStatus::WRONG_PASSWORD:
-        case WifiStatus::NO_SSID_AVAILABLE:
+        case WiFiStatus::CONNECTION_FAILED:
+        case WiFiStatus::WRONG_PASSWORD:
+        case WiFiStatus::NO_SSID_AVAILABLE:
             handleConnectionError("WiFi connection failed", ErrorCode::WIFI_CONNECTION_FAILED);
             break;
             

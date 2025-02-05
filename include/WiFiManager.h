@@ -5,7 +5,7 @@
 #include "ConfigManager.h"
 #include "Logger.h"
 
-enum class WifiStatus {
+enum class WiFiStatus {
     UNINITIALIZED,
     DISCONNECTED,
     CONNECTING,
@@ -16,31 +16,31 @@ enum class WifiStatus {
     __DELIMITER__
 };
 
-class WifiManager {
+class WiFiManager {
 private:
-    WifiManager()
-        : status(WifiStatus::DISCONNECTED)
+    WiFiManager()
+        : status(WiFiStatus::DISCONNECTED)
         , lastAttempt(0)
         , connectionAttempts(0)
         , configManager(ConfigManager::getInstance())
         , log(Logger::getInstance()) {}
 
-    WifiStatus status;
+    WiFiStatus status;
     uint32_t lastAttempt;
     uint8_t connectionAttempts;
 
     ConfigManager& configManager;
     Logger& log;
 
-    const char *getWifiStatusString(WifiStatus status);
-    constexpr size_t getWifiStatusCount() {return static_cast<size_t>(WifiStatus::__DELIMITER__);};
+    const char *getWifiStatusString(WiFiStatus status);
+    constexpr size_t getWifiStatusCount() {return static_cast<size_t>(WiFiStatus::__DELIMITER__);};
 
 public:
-    WifiManager(const WifiManager&) = delete;
-    void operator=(const WifiManager&) = delete;
+    WiFiManager(const WiFiManager&) = delete;
+    void operator=(const WiFiManager&) = delete;
 
-    static WifiManager& getInstance() {
-        static WifiManager instance;
+    static WiFiManager& getInstance() {
+        static WiFiManager instance;
         return instance;
     }
 
@@ -58,7 +58,7 @@ public:
     int32_t getRSSI();
     uint8_t getConnectionAttempts();
 
-    WifiStatus getStatus();
+    WiFiStatus getStatus();
     const char* getStatusString() { return getWifiStatusString(status); };
 };
 

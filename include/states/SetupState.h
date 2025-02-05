@@ -26,12 +26,12 @@ private:
         : DeviceState(device, StateIdentifier::SETUP_STATE)
         , log(Logger::getInstance())
         , configManager(ConfigManager::getInstance())
-        , wifiManager(WifiManager::getInstance())
+        , wifiManager(WiFiManager::getInstance())
         , mqttManager(MQTTManager::getInstance()) {};
 
     Logger& log;
     ConfigManager& configManager;
-    WifiManager& wifiManager;
+    WiFiManager& wifiManager;
     MQTTManager& mqttManager;
 
     static const uint32_t SETUP_TIMEOUT = 60000;
