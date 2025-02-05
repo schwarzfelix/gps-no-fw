@@ -11,7 +11,6 @@
 
 #include "ConfigManager.h"
 #include "states/DeviceState.h"
-#include "states/SetupState.h"
 #include "MQTTManager.h"
 #include "Logger.h"
 #include <ArduinoJson.h>

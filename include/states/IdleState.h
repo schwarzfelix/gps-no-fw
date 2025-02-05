@@ -2,6 +2,7 @@
 #define IDLE_STATE_H
 
 #include <Device.h>
+#include "states/SetupState.h"
 
 class IdleState : public DeviceState {
 private:

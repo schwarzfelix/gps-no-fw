@@ -4,6 +4,8 @@
 #include <Update.h>
 #include <HTTPClient.h>
 #include "Device.h"
+#include "states/ActionState.h"
+#include "states/ErrorState.h"
 #include "ErrorCodes.h"
 #include "DeviceState.h"
 
