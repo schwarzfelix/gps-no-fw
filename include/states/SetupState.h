@@ -5,7 +5,7 @@
 #include <WiFi.h>
 #include <Logger.h>
 #include "WiFiManager.h"
-#include "MqttManager.h"
+#include "MQTTManager.h"
 #include "states/ErrorState.h"
 #include "states/ActionState.h"
 #include "states/UpdateState.h"
