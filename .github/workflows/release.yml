@@ -1,54 +1,57 @@
-name: Automated Firmware Release
+name: Build and Release Firmware
 
 on:
-  push:
+  push:    
     branches:
       - main
     tags:
-      - 'v0.0.*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-
+    
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Cache pip
+      uses: actions/cache@v3
       with:
-        fetch-depth: 0
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        
+    - name: Cache PlatformIO
+      uses: actions/cache@v3
+      with:
+        path: ~/.platformio
+        key: ${{ runner.os }}-${{ hashFiles('**/lockfiles') }}
 
-    - uses: actions/setup-python@v5
+    - name: Set up Python
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
-    - name: Automatisch taggen (Breaking oder Minor)
-      if: startsWith(github.ref, 'refs/heads/') && (!contains(github.ref_name, '0.0'))
-      id: tag_version
-      uses: mathieudutour/github-tag-action@v6.1
-      with:
-        github_token: ${{ secrets.SECRET_TOKEN }}
-        default_bump: minor
-        tag_prefix: v
-        tag_suffix: "" 
-
     - name: Install PlatformIO
-      run: pip install --upgrade platformio
+      run: |
+        python -m pip install --upgrade pip
+        pip install platformio
 
     - name: Build Firmware
-      run: pio run
+      run: pio run -e station
 
-    - name: Create GitHub Release
-      if: ${{ steps.tag_version.outputs.new_tag || startsWith(github.ref, 'refs/tags/v') }}
+    - name: Create Release
+      id: create_release
       uses: softprops/action-gh-release@v1
       with:
-        files: .pio/build/station/firmware.bin
-        tag_name: ${{ steps.tag_version.outputs.new_tag || github.ref_name }}
-        generate_release_notes: true
-
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: firmware
-        path: .pio/build/station/firmware.bin
+        files: |
+          .pio/build/station/firmware.bin
+        name: Release ${{ github.ref_name }}
+        body: |
+          Firmware Release ${{ github.ref_name }}
+          
+          Changes in this Release:
+          - Automated release from tag ${{ github.ref_name }}
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.SECRET_TOKEN }}
