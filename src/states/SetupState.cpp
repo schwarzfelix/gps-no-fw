@@ -25,8 +25,8 @@ void SetupState::update() {
         case SetupPhase::COMPLETED:
             mqttManager.update();
             
-            device->changeState(UpdateState::getInstance(device));
-            //device->changeState(ActionState::getInstance(device));
+            //device->changeState(UpdateState::getInstance(device));
+            device->changeState(ActionState::getInstance(device));
             break;
         case SetupPhase::FAILED:
             handleSetupFailure();
