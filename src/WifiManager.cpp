@@ -1,5 +1,7 @@
 #include "WiFiManager.h"
 
+const uint8_t FTM_FRAME_COUNT = 16;
+const uint16_t FTM_BURST_PERIOD = 2;    
 
 const char* WiFiManager::getWifiStatusString(WiFiStatus status) {
     switch (status) {
@@ -123,3 +125,21 @@ uint8_t WiFiManager::getConnectionAttempts() {
     return connectionAttempts;
 }
 
+uint8_t* WiFiManager::getBSSID() {
+    return WiFi.BSSID();
+}
+
+bool WiFiManager::initiateFTM() {
+    
+    Serial.print("Initiating FTM session with Frame Count ");
+    Serial.print(FTM_FRAME_COUNT);
+    Serial.print(" and Burst Period ");
+    Serial.print(FTM_BURST_PERIOD * 100);
+    Serial.println(" ms");
+
+    if (!WiFi.initiateFTM(FTM_FRAME_COUNT, FTM_BURST_PERIOD)) {
+        Serial.println("FTM Error: Initiate Session Failed");
+        return false;
+    }
+    return true;
+}
