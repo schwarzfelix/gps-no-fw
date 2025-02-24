@@ -66,6 +66,7 @@ public:
     bool getFtmReportBssid(uint8_t channel, byte mac[]);
     static void onFtmReport(arduino_event_t *event);
     void softAP();
+    void scan();
 
     WiFiStatus getStatus();
     const char* getStatusString() { return getWifiStatusString(status); };
