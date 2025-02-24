@@ -29,6 +29,9 @@ private:
     uint32_t lastAttempt;
     uint8_t connectionAttempts;
 
+    bool ftmSuccess;
+    SemaphoreHandle_t ftmSemaphore;
+
     ConfigManager& configManager;
     Logger& log;
 
@@ -59,7 +62,10 @@ public:
     int32_t getRSSI();
     uint8_t getConnectionAttempts();
     
-    bool initiateFTM();
+    bool getFtmReportConnected();
+    bool getFtmReportBssid(uint8_t channel, byte mac[]);
+    static void onFtmReport(arduino_event_t *event);
+    void softAP();
 
     WiFiStatus getStatus();
     const char* getStatusString() { return getWifiStatusString(status); };

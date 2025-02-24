@@ -1,7 +1,9 @@
 #include "WiFiManager.h"
 
 const uint8_t FTM_FRAME_COUNT = 16;
-const uint16_t FTM_BURST_PERIOD = 2;    
+const uint16_t FTM_BURST_PERIOD = 2;
+const char *WIFI_FTM_SSID = "FTM";
+const char *WIFI_FTM_PASS = "password";
 
 const char* WiFiManager::getWifiStatusString(WiFiStatus status) {
     switch (status) {
@@ -27,6 +29,9 @@ bool WiFiManager::begin(){
         log.warning("WiFiManager", "No password available, skipping WiFiManager initialization");
         return false;
     } 
+
+    ftmSemaphore = xSemaphoreCreateBinary();
+    WiFi.onEvent(onFtmReport, ARDUINO_EVENT_WIFI_FTM_REPORT);
 
     WiFi.mode(WIFI_STA);
     return true;
@@ -129,9 +134,9 @@ uint8_t* WiFiManager::getBSSID() {
     return WiFi.BSSID();
 }
 
-bool WiFiManager::initiateFTM() {
-    
-    Serial.print("Initiating FTM session with Frame Count ");
+bool WiFiManager::getFtmReportConnected() {
+
+    Serial.print("Initiating FTM session to Connected with Frame Count ");
     Serial.print(FTM_FRAME_COUNT);
     Serial.print(" and Burst Period ");
     Serial.print(FTM_BURST_PERIOD * 100);
@@ -141,5 +146,42 @@ bool WiFiManager::initiateFTM() {
         Serial.println("FTM Error: Initiate Session Failed");
         return false;
     }
-    return true;
+    
+    return xSemaphoreTake(ftmSemaphore, portMAX_DELAY) == pdPASS && ftmSuccess;
+}
+
+//TODO single method with optional parameters
+
+bool WiFiManager::getFtmReportBssid(uint8_t channel, byte mac[]) {
+
+    Serial.print("Initiating FTM session to Other with Frame Count ");
+    Serial.print(FTM_FRAME_COUNT);
+    Serial.print(" and Burst Period ");
+    Serial.print(FTM_BURST_PERIOD * 100);
+    Serial.println(" ms");
+
+    if (!WiFi.initiateFTM(FTM_FRAME_COUNT, FTM_BURST_PERIOD, channel, mac)) {
+        Serial.println("FTM Error: Initiate Session Failed");
+        return false;
+    }
+    
+    return xSemaphoreTake(ftmSemaphore, portMAX_DELAY) == pdPASS && ftmSuccess;
+}
+
+void WiFiManager::onFtmReport(arduino_event_t *event) {
+    const char *status_str[5] = {"SUCCESS", "UNSUPPORTED", "CONF_REJECTED", "NO_RESPONSE", "FAIL"};
+    wifi_event_ftm_report_t *report = &event->event_info.wifi_ftm_report;
+    WiFiManager::getInstance().ftmSuccess = report->status == FTM_STATUS_SUCCESS;
+    if (WiFiManager::getInstance().ftmSuccess) {
+        Serial.printf("FTM Estimate: Distance: %.2f m, Return Time: %lu ns\n", (float)report->dist_est / 100.0, report->rtt_est);
+        free(report->ftm_report_data);
+    } else {
+        Serial.print("FTM Error: ");
+        Serial.println(status_str[report->status]);
+    }
+    xSemaphoreGive(WiFiManager::getInstance().ftmSemaphore);
+}
+
+void WiFiManager::softAP(){
+    WiFi.softAP(WIFI_FTM_SSID, WIFI_FTM_PASS, 1, 0, 4, true);
 }
