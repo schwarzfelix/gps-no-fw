@@ -5,6 +5,12 @@
 #include "ConfigManager.h"
 #include "Logger.h"
 
+#include "esp_wifi.h"
+#include "esp_wifi_types.h"
+#include "esp_event_loop.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+
 enum class WiFiStatus {
     UNINITIALIZED,
     DISCONNECTED,

@@ -194,7 +194,7 @@ void WiFiManager::scan(){
     } else {
         Serial.print(n);
         Serial.println(" networks found");
-        Serial.println("Nr | SSID                             | RSSI | CH | Encryption | FTM");
+        Serial.println("Nr | SSID                             | RSSI | CH | MAC               | Encryption");
         for (int i = 0; i < n; ++i) {
             Serial.printf("%2d", i + 1);
             Serial.print(" | ");
@@ -203,6 +203,8 @@ void WiFiManager::scan(){
             Serial.printf("%4ld", WiFi.RSSI(i));
             Serial.print(" | ");
             Serial.printf("%2ld", WiFi.channel(i));
+            Serial.print(" | ");
+            Serial.printf("%02X:%02X:%02X:%02X:%02X:%02X", WiFi.BSSID(i)[0], WiFi.BSSID(i)[1], WiFi.BSSID(i)[2], WiFi.BSSID(i)[3], WiFi.BSSID(i)[4], WiFi.BSSID(i)[5]);
             Serial.print(" | ");
             switch (WiFi.encryptionType(i)) {
                 case WIFI_AUTH_OPEN:            Serial.print("open"); break;
@@ -216,7 +218,6 @@ void WiFiManager::scan(){
                 case WIFI_AUTH_WAPI_PSK:        Serial.print("WAPI"); break;
                 default:                        Serial.print("unknown");
             }
-            Serial.print(" | ");
             Serial.println();
             delay(10);
         }
